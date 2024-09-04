@@ -52,14 +52,38 @@
 (defparameter *shell* "/bin/sh"
   "Program to use to execute shell commands.")
 
+;; Are we running inside a real terminal window? Unbound by default.
+(defvar *termp*) ;; unbound
+
+(defun termp (&key force)
+  "Return T if we run on a terminal.
+  This must fail on Slime (on Emacs' default shell prompt) and succeed on a Lisp in a terminal window."
+  ;; from vindarel/termp
+  (if (and (not force)
+           (boundp '*termp*))
+      *termp*
+      (setf *termp* (not (equalp "dumb" (uiop:getenv "TERM"))))))
+
+(defun interactive-shell-command (command)
+  (uiop:run-program command :output :interactive
+                            :error-output :interactive
+                            :input :interactive))
+
 (defun script (str &key (program *shell*))
   "Execute the STR string as a standard input of the program.
 
-Returns three values.
+If we are on \"dumb\" terminal, as of $TERM, such as Slime's REPL, run the program synchronously and print stdout, stderr and the return code.
+  If we are on a real terminal, run the command asynchronously and interactively. That way, we can see the output as it is printed, and visual and interactive commands work (top, vim, sudo...).
+
+Returns three values (dumb terminal only).
    1. Standard output of the program
    2. Standard error of the program
    3. Exit code of the program"
-  (shell-command (format nil "exec ~A" program) :input str))
+  (if (termp)
+      ;; On real terminal, with the interactive output, no need to princ the result (NIL).
+      (interactive-shell-command str)
+      ;; On a dumb terminal, print our result.
+      (princ (shell-command (format nil "exec ~A" program) :input str))))
 
 (defun mixed-template (&rest strlist)
   "Concatenate list of arguments into a string.
@@ -192,7 +216,7 @@ will be read as (\"asd foo \" (+ 2 2) \" bar \" (+ 3 3))."
                  (read-interpolated-string stream #\Newline nil t))))
     (if (and (> (length ll) 0) (string= (subseq ll 0 1) "!"))
       (enter-shell-mode stream)
-      (princ (script ll))))
+      (script ll)))
   nil)
 
 (defun embedded-shell-escape-reader (stream char)
