@@ -1,11 +1,26 @@
 # CLESH — A Unix shell interface for Common Lisp
 
-Christian von Essen
-    
 This manual documents CLESH (Common Lisp Embedded Shell) , a very
 short and simple program, written in Common Lisp, that extends Common
-Lisp to embed shell code in a manner similar to perl's backtick. It
-has been forked from from SHELISP by Alexandru Dan Corlana
+Lisp to embed shell code in a manner similar to perl's backtick.
+
+It has been forked from from SHELISP by Alexandru Dan Corlana
+
+CLESH author: Christian von Essen
+maintainers: lisp-maintainers
+
+## This fork
+
+- added <2024-09-04>: interactive commands by default.
+
+If we are on a "dumb" terminal, as of `$TERM`, such as Slime's REPL, run
+the program synchronously and print stdout, stderr and the return
+code.
+
+But If we are on a real terminal, run the command asynchronously
+and interactively. That way, we can see the output as it is printed,
+and visual and interactive commands work (top, vim, sudo...).
+
 
 ## Quick guide to clesh
 
